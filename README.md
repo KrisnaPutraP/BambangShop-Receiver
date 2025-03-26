@@ -77,7 +77,7 @@ You can install Postman via this website: https://www.postman.com/downloads/
     -   [x] Commit: `Implement receive function in Notification controller.`
     -   [x] Commit: `Implement list_messages function in Notification service.`
     -   [x] Commit: `Implement list function in Notification controller.`
-    -   [ ] Write answers of your learning module's "Reflection Subscriber-2" questions in this README.
+    -   [x] Write answers of your learning module's "Reflection Subscriber-2" questions in this README.
 
 ## Your Reflections
 This is the place for you to write reflections:
@@ -101,3 +101,23 @@ Unlike Java, which handles thread safety concerns at runtime, Rust enforces thre
 The `lazy_static` library provides a convenient way to have static variables that are initialized only when first accessed (lazy initialization) while still maintaining Rust's safety guarantees. It handles the synchronization internally, ensuring that our static collections remain thread-safe while allowing us to modify their contents. This approach aligns with Rust's philosophy of making potentially dangerous operations explicit rather than implicit as they might be in Java.
 
 #### Reflection Subscriber-2
+
+>Have you explored things outside of the steps in the tutorial, for example: src/lib.rs? If not, explain why you did not do so. If yes, explain things that you have learned from those other parts of code.
+
+Yes, I've explored several parts of the codebase outside the tutorial steps, particularly looking at `src/lib.rs` and `main.rs`. From `lib.rs`, I learned how the application manages its configuration through the AppConfig struct, which uses `lazy_static` to create a singleton-like pattern for application settings. I found it interesting how the code uses Rocket's Figment configuration system to merge default values with environment variables (loaded via dotenv), making the application configurable without code changes.
+
+The error handling pattern with custom ErrorResponse types and the `compose_error_response` helper function shows a consistent approach to API error responses. Meanwhile, in `main.rs`, I saw how the Rocket framework is initialized and configured, with the HTTP client being registered as a managed state and the routing being attached through the `route_stage` function.
+
+>Since you have completed the tutorial by now and have tried to test your notification system by spawning multiple instances of Receiver, explain how Observer pattern eases you to plug in more subscribers. How about spawning more than one instance of Main app, will it still be easy enough to add to the system?
+
+After completing the tutorial and testing the notification system with multiple Receiver instances, I've found that the Observer pattern makes adding new subscribers remarkably straightforward. I simply need to launch another Receiver instance on a different port (as explained on the tutorial) and have it subscribe to product types of interest. The Main app doesn't need any code changes to accommodate these new subscribers, because it automatically registers them when they subscribe and begins pushing notifications to them when relevant events occur. This demonstrates the power of the Observer pattern in creating loosely coupled systems where publishers and subscribers can evolve independently.
+
+However, spawning multiple instances of the Main app would be more challenging. Since each Main app maintains its own separate list of subscribers in its DashMap, subscribers would need to explicitly register with each Main app instance. This would require either modifying the Receiver app to be aware of multiple publishers or implementing a synchronization mechanism between Main app instances to share subscription information. Additionally, if a product is created in one Main app instance, other instances wouldn't automatically know about it to send notifications. This limitation highlights that while the Observer pattern excels at one-to-many relationships, additional architectural patterns like event sourcing or a shared message broker would be needed to effectively handle many-to-many relationships between multiple publishers and subscribers.
+
+>Have you tried to make your own Tests, or enhance documentation on your Postman collection? If you have tried those features, tell us whether it is useful for your work (it can be your tutorial work or your Group Project).
+
+Yes, I've enhanced my Postman collection by adding descriptive documentation to each endpoint and creating test scripts. With the help of ChatGPT, I added detailed descriptions explaining what each endpoint does in relation to the Observer pattern. For example, clarifying that the "Create New Product" endpoint not only creates a product but also triggers notifications to relevant subscribers.
+
+I also added test scripts to validate responses (with the help from ChatGPT as well). For example, on the subscription endpoint, I added tests to verify that the response contains the correct subscriber URL and product type, and for the notification endpoints, I added tests to check that notifications are properly formatted and contain all required fields.
+
+These enhancements proved extremely valuable for both my tutorial work and my Final Project. The documented collection serves as self-explanatory API documentation that helps me remember how the system functions when I return to it after focusing on other aspects. The test scripts help me quickly verify if my implementation is working correctly without having to manually inspect each response.
